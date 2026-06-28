@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KIRO PROJECT</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #0A0A0A;
+            --surface: #111111;
+            --text: #EDEDEC;
+            --text-muted: #6E6D6A;
+            --border: #1F1F1F;
+            --accent: #A0A0A0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, sans-serif;
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* Cursor spotlight */
+        .spotlight {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s ease;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 80px 24px;
+        }
+
+        /* Hero */
+        .hero {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .logo-wrapper {
+            display: inline-block;
+            position: relative;
+            margin-bottom: 32px;
+        }
+
+        .logo {
+            width: 140px;
+            height: 140px;
+            border-radius: 20px;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .logo-wrapper:hover .logo {
+            transform: scale(1.05) rotate(-2deg);
+        }
+
+        .logo-glow {
+            position: absolute;
+            inset: -20px;
+            background: radial-gradient(circle, rgba(255,100,50,0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .logo-wrapper:hover .logo-glow {
+            opacity: 1;
+        }
+
+        .title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 500;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: 12px;
+            color: var(--text);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+        }
+
+        .subtitle {
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+        }
+
+        /* Projects Grid */
+        .projects {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 64px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+        }
+
+        .project {
+            background: var(--surface);
+            padding: 24px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .project::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.03) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .project:hover::before {
+            opacity: 1;
+        }
+
+        .project:hover {
+            background: #161616;
+            transform: translateX(4px);
+        }
+
+        .project-info { flex: 1; position: relative; z-index: 1; }
+
+        .project-name {
+            font-size: 0.95rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            margin-bottom: 4px;
+            transition: color 0.2s ease;
+        }
+
+        .project:hover .project-name { color: #fff; }
+
+        .project-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 0.03em;
+        }
+
+        .project-address {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--accent);
+            margin-top: 8px;
+            padding: 6px 10px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            display: inline-block;
+            letter-spacing: 0.02em;
+            transition: all 0.2s ease;
+        }
+
+        .project:hover .project-address {
+            border-color: #333;
+            background: #0d0d0d;
+        }
+
+        .project-arrow {
+            color: var(--border);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            margin-left: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .project:hover .project-arrow {
+            color: var(--text);
+            transform: translateX(4px);
+        }
+
+        /* Status */
+        .status {
+            text-align: center;
+            margin-bottom: 64px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            padding: 8px 14px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 9999px;
+            transition: all 0.3s ease;
+        }
+
+        .status-badge:hover {
+            border-color: #333;
+            transform: scale(1.02);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: #4ADE80;
+            border-radius: 50%;
+            animation: pulse 2s ease infinite;
+            box-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
+        }
+
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px solid var(--border);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .footer a::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--text);
+            transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .footer a:hover::after { width: 100%; }
+        .footer a:hover { color: var(--text); border-color: transparent; }
+
+        /* Animations */
+        @keyframes fadeUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 8px rgba(74, 222, 128, 0.4); }
+            50% { opacity: 0.5; box-shadow: 0 0 4px rgba(74, 222, 128, 0.2); }
+        }
+
+        /* Copy feedback */
+        .copied .project-address {
+            background: var(--accent);
+            color: var(--bg);
+            border-color: var(--accent);
+        }
+
+        /* Floating particles */
+        .particles {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            animation: float linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
+        }
+
+        /* Magnetic hover for buttons */
+        .magnetic {
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Tilt effect on cards */
+        .tilt {
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .tilt-inner {
+            transform: translateZ(0);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .tilt:hover .tilt-inner {
+            transform: translateZ(20px);
+        }
+    </style>
+</head>
+<body>
+    <div class="spotlight" id="spotlight"></div>
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+        <div class="hero">
+            <div class="logo-wrapper">
+                <div class="logo-glow"></div>
+                <img src="logo.png" alt="MARMELAD" class="logo" id="logo">
+            </div>
+            <h1 class="title">KIRO PROJECT</h1>
+            <p class="subtitle">Ecosystem</p>
+        </div>
+
+        <div class="projects">
+            <a href="https://app.kiroproject.online/" class="project tilt">
+                <div class="project-info tilt-inner">
+                    <div class="project-name">MARMELAD VPN</div>
+                    <div class="project-desc">app.kiroproject.online</div>
+                </div>
+                <svg class="project-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </a>
+
+            <div class="project tilt" id="server" onclick="copyAddress()">
+                <div class="project-info tilt-inner">
+                    <div class="project-name">MARMELAD WORLD</div>
+                    <div class="project-desc">Fabric 26.1.2</div>
+                    <div class="project-address" id="address">mine.kiroproject.online</div>
+                </div>
+                <svg class="project-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" id="copy-icon">
+                    <rect x="5" y="5" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M3 11V3H11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="status">
+            <div class="status-badge magnetic">
+                <div class="status-dot"></div>
+                All systems operational
+            </div>
+        </div>
+
+        <div class="footer">
+            Made by <a href="https://t.me/sirbiprod">@sirbiprod</a>
+        </div>
+    </div>
+
+    <script>
+        // Cursor spotlight
+        const spotlight = document.getElementById('spotlight');
+        let mouseX = 0, mouseY = 0;
+        let spotX = 0, spotY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        function animateSpotlight() {
+            spotX += (mouseX - spotX) * 0.15;
+            spotY += (mouseY - spotY) * 0.15;
+            spotlight.style.left = spotX + 'px';
+            spotlight.style.top = spotY + 'px';
+            requestAnimationFrame(animateSpotlight);
+        }
+        animateSpotlight();
+
+        // Project card mouse tracking for radial gradient
+        document.querySelectorAll('.project').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                card.style.setProperty('--mouse-x', x + '%');
+                card.style.setProperty('--mouse-y', y + '%');
+            });
+        });
+
+        // Logo parallax on mouse
+        const logo = document.getElementById('logo');
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 10;
+            const y = (e.clientY / window.innerHeight - 0.5) * 10;
+            logo.style.transform = `translate(${x}px, ${y}px)`;
+        });
+
+        // Floating particles
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 20; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDuration = (Math.random() * 20 + 15) + 's';
+            particle.style.animationDelay = (Math.random() * 20) + 's';
+            particle.style.width = (Math.random() * 2 + 1) + 'px';
+            particle.style.height = particle.style.width;
+            particlesContainer.appendChild(particle);
+        }
+
+        // Magnetic hover effect
+        document.querySelectorAll('.magnetic').forEach(el => {
+            el.addEventListener('mousemove', (e) => {
+                const rect = el.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                el.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`;
+            });
+            el.addEventListener('mouseleave', () => {
+                el.style.transform = 'translate(0, 0)';
+            });
+        });
+
+        // Tilt effect
+        document.querySelectorAll('.tilt').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / rect.width;
+                const y = (e.clientY - rect.top) / rect.height;
+                const tiltX = (y - 0.5) * 6;
+                const tiltY = (x - 0.5) * -6;
+                card.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translateX(4px)`;
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateX(0)';
+            });
+        });
+
+        // Copy address
+        function copyAddress() {
+            navigator.clipboard.writeText('mine.kiroproject.online');
+            const el = document.getElementById('server');
+            const icon = document.getElementById('copy-icon');
+            el.classList.add('copied');
+            icon.innerHTML = '<path d="M4 8L7 11L12 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>';
+            setTimeout(() => {
+                el.classList.remove('copied');
+                icon.innerHTML = '<rect x="5" y="5" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><path d="M3 11V3H11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>';
+            }, 2000);
+        }
+
+        // Reduced motion
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            document.querySelectorAll('.particle').forEach(p => p.remove());
+            spotlight.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
