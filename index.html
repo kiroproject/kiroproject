@@ -198,109 +198,76 @@
         }
 
         .project-arrow {
-            color: var(--border);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             margin-left: 16px;
+            color: var(--text-muted);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
             position: relative;
             z-index: 1;
         }
 
         .project:hover .project-arrow {
-            color: var(--text);
             transform: translateX(4px);
+            color: var(--text);
+        }
+
+        .copied .project-address {
+            background: var(--accent);
+            color: var(--bg);
+            border-color: var(--accent);
+        }
+
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* Status */
         .status {
             text-align: center;
-            margin-bottom: 64px;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+            margin-bottom: 48px;
         }
 
         .status-badge {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            font-size: 0.7rem;
-            font-weight: 500;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            padding: 8px 14px;
+            padding: 8px 16px;
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 9999px;
-            transition: all 0.3s ease;
-        }
-
-        .status-badge:hover {
-            border-color: #333;
-            transform: scale(1.02);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 0.02em;
         }
 
         .status-dot {
             width: 6px;
             height: 6px;
-            background: #4ADE80;
             border-radius: 50%;
-            animation: pulse 2s ease infinite;
+            background: #4ade80;
             box-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
         /* Footer */
         .footer {
             text-align: center;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
-            letter-spacing: 0.05em;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
+            letter-spacing: 0.02em;
         }
 
         .footer a {
             color: var(--accent);
             text-decoration: none;
-            border-bottom: 1px solid var(--border);
-            transition: all 0.2s ease;
-            position: relative;
+            transition: color 0.2s ease;
         }
 
-        .footer a::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            width: 0;
-            height: 1px;
-            background: var(--text);
-            transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .footer a:hover::after { width: 100%; }
-        .footer a:hover { color: var(--text); border-color: transparent; }
-
-        /* Animations */
-        @keyframes fadeUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; box-shadow: 0 0 8px rgba(74, 222, 128, 0.4); }
-            50% { opacity: 0.5; box-shadow: 0 0 4px rgba(74, 222, 128, 0.2); }
-        }
-
-        /* Copy feedback */
-        .copied .project-address {
-            background: var(--accent);
-            color: var(--bg);
-            border-color: var(--accent);
-        }
+        .footer a:hover { color: var(--text); }
 
         /* Floating particles */
         .particles {
@@ -365,8 +332,28 @@
         <div class="projects">
             <a href="https://app.kiroproject.online/" class="project tilt">
                 <div class="project-info tilt-inner">
-                    <div class="project-name">MARMELAD VPN</div>
+                    <div class="project-name">MARMELAD APP</div>
                     <div class="project-desc">app.kiroproject.online</div>
+                </div>
+                <svg class="project-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </a>
+
+            <a href="https://github.com/sirbiprod" class="project tilt" target="_blank" rel="noopener">
+                <div class="project-info tilt-inner">
+                    <div class="project-name">@sirbiprod</div>
+                    <div class="project-desc">GitHub</div>
+                </div>
+                <svg class="project-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </a>
+
+            <a href="https://github.com/kiroproject" class="project tilt" target="_blank" rel="noopener">
+                <div class="project-info tilt-inner">
+                    <div class="project-name">@kiroproject</div>
+                    <div class="project-desc">GitHub</div>
                 </div>
                 <svg class="project-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
