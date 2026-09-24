@@ -220,6 +220,30 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Video */
+        .video {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 64px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+        }
+
+        .video video {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #000;
+        }
+
         /* Status */
         .status {
             text-align: center;
@@ -252,6 +276,124 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
+
+        .status-badge.degraded .status-dot {
+            background: #fbbf24;
+            box-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
+        }
+
+        .status-badge.unknown .status-dot {
+            background: var(--text-muted);
+            box-shadow: none;
+            animation: none;
+        }
+
+        /* Servers (Xray-Checker) */
+        .servers {
+            margin-bottom: 32px;
+        }
+
+        .servers[hidden] { display: none; }
+
+        .servers-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding: 0 4px;
+        }
+
+        .servers-title {
+            font-size: 0.7rem;
+            font-weight: 500;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .servers-updated {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .server-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .server-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            background: var(--surface);
+            font-size: 0.85rem;
+        }
+
+        .server-dot {
+            flex: none;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #4ade80;
+            box-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
+        }
+
+        .server-row.down .server-dot {
+            background: #f87171;
+            box-shadow: 0 0 8px rgba(248, 113, 113, 0.4);
+        }
+
+        .server-flag {
+            flex: none;
+            display: inline-flex;
+            width: 20px;
+            height: 14px;
+            border-radius: 2px;
+            overflow: hidden;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+        }
+
+        .server-flag svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .server-flag.code {
+            align-items: center;
+            justify-content: center;
+            background: var(--border);
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.55rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        .server-name {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .server-latency {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--accent);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .server-row.down .server-latency { color: #f87171; }
 
         /* Footer */
         .footer {
@@ -373,10 +515,24 @@
             </div>
         </div>
 
+        <div class="video">
+            <video controls preload="metadata" playsinline poster="poster.jpg">
+                <source src="kiro.mp4" type="video/mp4">
+            </video>
+        </div>
+
+        <section class="servers" id="servers" hidden aria-labelledby="servers-title">
+            <div class="servers-head">
+                <span class="servers-title" id="servers-title">Servers</span>
+                <span class="servers-updated" id="servers-updated"></span>
+            </div>
+            <ul class="server-list" id="server-list"></ul>
+        </section>
+
         <div class="status">
-            <div class="status-badge magnetic">
+            <div class="status-badge magnetic unknown" id="status-badge" role="status" aria-live="polite">
                 <div class="status-dot"></div>
-                All systems operational
+                <span id="status-text">Checking status…</span>
             </div>
         </div>
 
@@ -477,6 +633,100 @@
                 icon.innerHTML = '<rect x="5" y="5" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><path d="M3 11V3H11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>';
             }, 2000);
         }
+
+        // Server statuses from Xray-Checker (proxied same-origin by nginx: /api/status)
+        const serversEl = document.getElementById('servers');
+        const listEl = document.getElementById('server-list');
+        const updatedEl = document.getElementById('servers-updated');
+        const badgeEl = document.getElementById('status-badge');
+        const badgeText = document.getElementById('status-text');
+
+        function setBadge(state, text) {
+            badgeEl.classList.remove('degraded', 'unknown');
+            if (state !== 'ok') badgeEl.classList.add(state);
+            badgeText.textContent = text;
+        }
+
+        // Emoji flags don't render on Windows, so draw them as inline SVG.
+        const FLAGS = {
+            NL: '<svg viewBox="0 0 9 6" preserveAspectRatio="xMidYMid slice"><path fill="#21468B" d="M0 0h9v6H0z"/><path fill="#FFF" d="M0 0h9v4H0z"/><path fill="#AE1C28" d="M0 0h9v2H0z"/></svg>',
+            FI: '<svg viewBox="0 0 18 11" preserveAspectRatio="xMidYMid slice"><path fill="#FFF" d="M0 0h18v11H0z"/><path fill="#002F6C" d="M0 4h18v3H0zM5 0h3v11H5z"/></svg>',
+            DE: '<svg viewBox="0 0 5 3" preserveAspectRatio="xMidYMid slice"><path fill="#FFCE00" d="M0 0h5v3H0z"/><path fill="#D00" d="M0 0h5v2H0z"/><path fill="#000" d="M0 0h5v1H0z"/></svg>'
+        };
+
+        // Split "🇳🇱 Нидерланды 2" into country code "NL" and the rest of the name.
+        function splitFlag(raw) {
+            const name = String(raw || '').trim();
+            const m = name.match(/^([\u{1F1E6}-\u{1F1FF}])([\u{1F1E6}-\u{1F1FF}])\s*/u);
+            if (!m) return { code: null, name };
+            const code = String.fromCharCode(
+                m[1].codePointAt(0) - 0x1F1E6 + 65,
+                m[2].codePointAt(0) - 0x1F1E6 + 65
+            );
+            return { code, name: name.slice(m[0].length).trim() };
+        }
+
+        function flagEl(code) {
+            const el = document.createElement('span');
+            el.className = 'server-flag';
+            el.setAttribute('aria-hidden', 'true');
+            if (FLAGS[code]) {
+                el.innerHTML = FLAGS[code];
+            } else {
+                el.classList.add('code');
+                el.textContent = code;
+            }
+            return el;
+        }
+
+        function ago(unixSec) {
+            const s = Math.max(0, Math.round(Date.now() / 1000 - unixSec));
+            if (s < 60) return s + 's ago';
+            return Math.round(s / 60) + 'm ago';
+        }
+
+        async function loadStatus() {
+            try {
+                const res = await fetch('/api/status', { cache: 'no-store' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const json = await res.json();
+                const items = Array.isArray(json && json.data) ? json.data : [];
+                if (!items.length) throw new Error('empty');
+
+                const rows = items.map(p => ({ p, ...splitFlag(p.name) }));
+                rows.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+                listEl.replaceChildren(...rows.map(({ p, code, name: label }) => {
+                    const li = document.createElement('li');
+                    li.className = 'server-row' + (p.online ? '' : ' down');
+                    const dot = document.createElement('span');
+                    dot.className = 'server-dot';
+                    const name = document.createElement('span');
+                    name.className = 'server-name';
+                    name.textContent = label;
+                    const lat = document.createElement('span');
+                    lat.className = 'server-latency';
+                    lat.textContent = p.online ? Math.round(p.latencyMs) + ' ms' : 'offline';
+                    if (code) li.append(dot, flagEl(code), name, lat);
+                    else li.append(dot, name, lat);
+                    return li;
+                }));
+
+                const up = items.filter(p => p.online).length;
+                const last = Math.max(...items.map(p => Number(p.lastCheck) || 0));
+                updatedEl.textContent = last ? 'checked ' + ago(last) : '';
+                serversEl.hidden = false;
+
+                if (up === items.length) setBadge('ok', 'All systems operational');
+                else if (up === 0) setBadge('degraded', 'All servers are down');
+                else setBadge('degraded', 'Partial outage · ' + up + '/' + items.length + ' online');
+            } catch (e) {
+                setBadge('unknown', 'Status unavailable');
+            }
+        }
+
+        loadStatus();
+        setInterval(() => { if (!document.hidden) loadStatus(); }, 60000);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) loadStatus(); });
 
         // Reduced motion
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
